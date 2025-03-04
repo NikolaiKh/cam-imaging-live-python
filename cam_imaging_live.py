@@ -155,21 +155,26 @@ class MainForm(QWidget):
         # self.camera.set_MaxSens()
         #get and set gains
         gain = self.camera.get_gain()
+        print(f"Camera gain: {gain}")
         # self.ui.gain_spinBox.setValue(gain)
         #get and set PModes to combobox
         PModes = self.camera.get_allPModevalues()
+        print(f"Camera avalible modes: {PModes}")
         self.ui.pModeComboBox.addItems(PModes)
         pmode = self.camera.get_PMode()
+        print(f"Camera current mode: {pmode}")
         index = PModes.index(pmode)
         if index >= 0:
             self.ui.pModeComboBox.setCurrentIndex(index)
         # get and set ROrates to combobox
         ROrates = self.camera.get_allReadoutRates()
-        self.ui.ROrateComboBox.addItems(ROrates)
-        ROrate = self.camera.get_ReadoutRate()
-        index = ROrates.index(ROrate)
-        if index >= 0:
-            self.ui.ROrateComboBox.setCurrentIndex(index)
+        print(f"Camera readout rates: {ROrates}")
+        # self.ui.ROrateComboBox.addItems(ROrates)
+        # ROrate = self.camera.get_ReadoutRate()
+        # print(f"Camera readout rate: {ROrate}")
+        # index = ROrates.index(ROrate)
+        # if index >= 0:
+        #     self.ui.ROrateComboBox.setCurrentIndex(index)
         #get and set binnings to combobox
         binnings = self.camera.get_allBinningvalues()
         self.ui.binningComboBox.addItems(binnings)
