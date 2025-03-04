@@ -216,10 +216,13 @@ class MMcamera():
         return allowed
 
     def get_TriggerMode(self):
-        if "Hamamatsu" not in self.name:
+        if self.instr.has_property("Camera", "TriggerMode"):
             return self.instr.get_property("Camera", "TriggerMode")
-        else:
+        elif "Hamamatsu" in self.name:
             return self.instr.get_property("Camera", "TRIGGER SOURCE")
+        else:
+            return "Camera has no Trigger Mode"
+
 
     def set_TriggerMode(self, val="Timed"):
         # Options we used in experiments (for Teledyne cameras):
@@ -317,7 +320,7 @@ if __name__ == "__main__":
     # camera.set_gain(2)
 
     print(f"All allowed binning options: {camera.get_allBinningvalues()}")
-    camera.set_binning(4)
+    # camera.set_binning(4)
     print(f"Binning {camera.get_binning()}")
     print(f"Pixel type {camera.get_PixelType()}")
 
@@ -326,7 +329,7 @@ if __name__ == "__main__":
     print(f"Trigger mode: {camera.get_TriggerMode()}")
     print(f"All trigger polarities: {camera.get_allTriggerPolarities()}")
     print(f"Current trigger polarity: {camera.get_TriggerPolarity()}")
-    camera.set_trigger_polarity("POSITIVE")
+    # camera.set_trigger_polarity("POSITIVE")
     print(f"Current trigger polarity: {camera.get_TriggerPolarity()}")
 
     # camera.set_PMode("Alternate Normal")
