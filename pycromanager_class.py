@@ -207,9 +207,15 @@ class MMcamera():
 
     def get_allTriggerModes(self):
         if "Hamamatsu" not in self.name:
-            javalist = self.instr.get_allowed_property_values("Camera", "TriggerMode")
+            if self.instr.has_property("Camera", "TriggerMode"):
+                javalist = self.instr.get_allowed_property_values("Camera", "TriggerMode")
+            else:
+                return "Camera has no TriggerMode"
         else:
-            javalist = self.instr.get_allowed_property_values("Camera", "TRIGGER SOURCE")
+            if self.instr.has_property("Camera", "TRIGGER SOURCE"):
+                javalist = self.instr.get_allowed_property_values("Camera", "TRIGGER SOURCE")
+            else:
+                return "Camera has no TriggerMode"
         allowed = []
         for index in range(javalist.capacity()):
             allowed.append(javalist.get(index))
@@ -243,7 +249,8 @@ class MMcamera():
             print(f"Trigger mode: { mode }")
 
     def set_trigger_polarity(self, val="POSITIVE"):
-        if "Hamamatsu" in self.name:
+        # if "Hamamatsu" in self.name:
+        if self.instr.has_property("Camera", "TriggerPolarity"):
             self.instr.set_property("Camera", "TriggerPolarity", str(val))
 
     def get_TriggerPolarity(self):
@@ -254,11 +261,14 @@ class MMcamera():
             return "Camera has no TriggerPolarity"
 
     def get_allTriggerPolarities(self):
-        javalist = self.instr.get_allowed_property_values("Camera", "TriggerPolarity")
-        allowed = []
-        for index in range(javalist.capacity()):
-            allowed.append(javalist.get(index))
-        return allowed
+        if self.instr.has_property("Camera", "TriggerPolarity"):
+            javalist = self.instr.get_allowed_property_values("Camera", "TriggerPolarity")
+            allowed = []
+            for index in range(javalist.capacity()):
+                allowed.append(javalist.get(index))
+            return allowed
+        else:
+            return "Camera has no TriggerPolarity"
 
     def get_allExposureTimes(self):
         javalist = self.instr.get_allowed_property_values("Camera", "Exposure")
