@@ -247,8 +247,11 @@ class MMcamera():
             self.instr.set_property("Camera", "TriggerPolarity", str(val))
 
     def get_TriggerPolarity(self):
-        if "Hamamatsu" in self.name:
+        # if "Hamamatsu" in self.name:
+        if self.instr.has_property("Camera", "TriggerPolarity"):
             return self.instr.get_property("Camera", "TriggerPolarity")
+        else:
+            return "Camera has no TriggerPolarity"
 
     def get_allTriggerPolarities(self):
         javalist = self.instr.get_allowed_property_values("Camera", "TriggerPolarity")
