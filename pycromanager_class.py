@@ -1,4 +1,4 @@
-#Import micromanager classes
+# Import micromanager classes
 from pycromanager import Core
 # from pycromanager import Bridge
 from datetime import datetime
@@ -12,10 +12,10 @@ class MMcamera():
         # self.instr.set_property('Core', 'AutoShutter', 0)
         self.mmdir = "C:\Program Files\Micro-Manager-2.0.3"
         self.configfile = "MMConfig_pvcam_simple_1.cfg"
+        self.param = {}
         self.name = self.get_camera_name()
         print(f"Camera {self.name} is connected")
         self.show = show
-        self.param = {}
         self.method_get = 'get_params'
         self.method_set = 'set_params'
         self.method_det = 'get_image_1D'
@@ -25,14 +25,16 @@ class MMcamera():
         print(f'{timestamp}  {message}')
 
     def get_camera_name(self):
-        return self.instr.get_property("Camera", "Description")
+        name = self.instr.get_property("Camera", "Description")
+        self.param["Name"] = name
+        return name
 
     def get_image(self):
         self.instr.snap_image()
         tagged_image = self.instr.get_tagged_image()
         h = tagged_image.tags['Height']
         w = tagged_image.tags['Width']
-        img = np.reshape(tagged_image.pix[0:h*w], newshape=[h, w])
+        img = np.reshape(tagged_image.pix[0:h * w], newshape=[h, w])
         self.param['Height'] = h
         self.param['Width'] = w
         return img
@@ -64,7 +66,10 @@ class MMcamera():
         return self.param
 
     def get_exposure_time(self):
-        return self.instr.get_property("Camera", "Exposure")
+        exp_time = self.instr.get_property("Camera", "Exposure")
+        self.param["Exp time"] = exp_time
+        return exp_time
+
     def set_exposure(self, val):
         # if val <= 8000:
         #     self.instr.set_exposure(val)
@@ -77,25 +82,27 @@ class MMcamera():
             if scan_mode == 2:
                 exp_step = float(self.instr.get_property("Camera", "INTERNAL LINE INTERVAL"))
             else:
-                exp_step = 0.03394 + 0.0001/11   # step for Ultra Quiet mode
+                exp_step = 0.03394 + 0.0001 / 11  # step for Ultra Quiet mode
             # exp_step = float(self.instr.get_property_lower_limit("Camera", "Exposure"))
             ratio = -(-val // exp_step)  # in ms, round up to integer
-            val = exp_step * ratio   # calculation of the new exposure value
+            val = exp_step * ratio  # calculation of the new exposure value
         self.instr.set_exposure(val)
-        # self.instr.set_property("Camera", "Exposure", val)
-        # self.get_params()
+        exp_time = self.instr.get_property("Camera", "Exposure")
+        self.param["Exp time"] = exp_time
 
     def set_shortest_exposure(self):
         if "Hamamatsu" in self.name:
             if self.get_scan_mode() == "2":
                 # exp_step = float(self.instr.get_property("Camera", "INTERNAL LINE INTERVAL"))
                 val = self.instr.get_property_lower_limit("Camera", "Exposure")
-                self.set_exposure(val*1.1)   # lower limit freezes MM with Hamamatsu cam
+                self.set_exposure(val * 1.1)  # lower limit freezes MM with Hamamatsu cam
             else:
                 self.set_exposure(0.05)
         else:
             self.set_exposure(0.02)
         print(f"Exposure time: {self.get_exposure_time()} ms")
+        exp_time = self.instr.get_property("Camera", "Exposure")
+        self.param["Exp time"] = exp_time
 
     def set_binning(self, binning=1):
         if isinstance(binning, int):
@@ -103,27 +110,30 @@ class MMcamera():
         else:
             val = binning
         self.instr.set_property("Camera", "Binning", val)
-        # self.get_params()
+        binning = self.instr.get_property("Camera", "Binning")
+        self.param["Binning"] = binning
 
     def get_binning(self):
-        return self.instr.get_property("Camera", "Binning")
+        binning = self.instr.get_property("Camera", "Binning")
+        self.param["Binning"] = binning
+        return binning
 
     def get_PMode(self):
         if "Hamamatsu" in self.name:
-            return self.instr.get_property("Camera", "SENSOR MODE")
+            mode = self.instr.get_property("Camera", "SENSOR MODE")
         elif self.instr.has_property("Camera", "PMode"):
-            return self.instr.get_property("Camera", "PMode")
+            mode = self.instr.get_property("Camera", "PMode")
         else:
-            return
+            mode = None
+        self.param["PMode"] = mode
+        return mode
 
     def set_PMode(self, mode="Normal"):
         if "Hamamatsu" in self.name:
             self.instr.set_property("Camera", "SENSOR MODE", mode)
         elif self.instr.has_property("Camera", "PMode"):
             self.instr.set_property("Camera", "PMode", mode)
-        else:
-            return
-        # self.get_params()
+        self.get_PMode()
 
     def get_allPModevalues(self):
         if "Hamamatsu" in self.name:
@@ -140,14 +150,15 @@ class MMcamera():
     def set_PixelType(self, val):
         if self.instr.has_property("Camera", "PixelType"):
             self.instr.set_property("Camera", "PixelType", val)
-        # self.get_params()
+        self.get_PixelType()
 
     def get_PixelType(self):
         if self.instr.has_property("Camera", "PixelType"):
-            return self.instr.get_property("Camera", "PixelType")
+            px_type =  self.instr.get_property("Camera", "PixelType")
         else:
-            return "Camear has no PixelType"
-        # self.get_params()
+            px_type = None
+        self.param["PixelType"] = px_type
+        return px_type
 
     def set_gain(self, val=1):
         if "Hamamatsu" in self.name:
@@ -158,9 +169,11 @@ class MMcamera():
 
     def get_gain(self):
         if self.instr.has_property("Camera", "Gain"):
-            return self.instr.get_property("Camera", "Gain")
+            gain = self.instr.get_property("Camera", "Gain")
         else:
-            return 1
+            gain = 1
+        self.param["Gain"] = gain
+        return gain
 
     def get_allGainvalues(self):
         if self.instr.has_property("Camera", "Gain"):
@@ -171,14 +184,16 @@ class MMcamera():
             return allowed
         else:
             return 1
-    
+
     def get_BitDepth(self):
         if "Hamamatsu" in self.name:
-            return self.instr.get_property("Camera", "Bits per Channel")
+            bit_depth =  self.instr.get_property("Camera", "Bits per Channel")
         elif self.instr.has_property("Camera", "BitDepth"):
-            return self.instr.get_property("Camera", "BitDepth")
+            bit_depth =  self.instr.get_property("Camera", "BitDepth")
         else:
-            return "Camera has no BitDepth"
+            bit_depth = None
+        self.param["BitDepth"] = bit_depth
+        return bit_depth
 
     def set_MaxSens(self, binning=4, mode="PHOTON NUMBER RESOLVING"):
         self.set_binning(binning)
@@ -207,12 +222,15 @@ class MMcamera():
     def set_ReadoutRate(self, val):
         if self.instr.has_property("Camera", "ReadoutRate"):
             self.instr.set_property("Camera", "ReadoutRate", str(val))
+        self.get_ReadoutRate()
 
     def get_ReadoutRate(self):
         if self.instr.has_property("Camera", "ReadoutRate"):
-            return self.instr.get_property("Camera", "ReadoutRate")
+            ro_rate = self.instr.get_property("Camera", "ReadoutRate")
         else:
-            return "Camera has no ReadoutRate"
+            ro_rate = None
+        self.param["ReadoutRate"] = ro_rate
+        return ro_rate
 
     def get_allTriggerModes(self):
         if "Hamamatsu" not in self.name:
@@ -232,11 +250,13 @@ class MMcamera():
 
     def get_TriggerMode(self):
         if self.instr.has_property("Camera", "TriggerMode"):
-            return self.instr.get_property("Camera", "TriggerMode")
+            trg_mode = self.instr.get_property("Camera", "TriggerMode")
         elif "Hamamatsu" in self.name:
-            return self.instr.get_property("Camera", "TRIGGER SOURCE")
+            trg_mode = self.instr.get_property("Camera", "TRIGGER SOURCE")
         else:
-            return "Camera has no Trigger Mode"
+            trg_mode = None
+        self.param["TriggerMode"] = trg_mode
+        return trg_mode
 
     def set_TriggerMode(self, val="Timed"):
         # Options we used in experiments (for Teledyne cameras):
@@ -245,7 +265,7 @@ class MMcamera():
         # Bulb - external trigger / external exposure time
         if "Hamamatsu" not in self.name:
             self.instr.set_property("Camera", "TriggerMode", str(val))
-        else:   # adaptation for Hamamatsu Quest v1
+        else:  # adaptation for Hamamatsu Quest v1
             if val == "Timed":
                 val = "INTERNAL"
             elif val == "Strobed":
@@ -254,19 +274,22 @@ class MMcamera():
                 self.set_trigger_polarity("POSITIVE")
             self.instr.set_property("Camera", "TRIGGER SOURCE", str(val))
             mode = self.instr.get_property("Camera", "TRIGGER SOURCE")
-            print(f"Trigger mode: { mode }")
+            print(f"Trigger mode: {mode}")
+        self.get_TriggerMode()
 
     def set_trigger_polarity(self, val="POSITIVE"):
         # if "Hamamatsu" in self.name:
         if self.instr.has_property("Camera", "TriggerPolarity"):
             self.instr.set_property("Camera", "TriggerPolarity", str(val))
+        self.get_TriggerPolarity()
 
     def get_TriggerPolarity(self):
-        # if "Hamamatsu" in self.name:
         if self.instr.has_property("Camera", "TriggerPolarity"):
-            return self.instr.get_property("Camera", "TriggerPolarity")
+            trg_polarity = self.instr.get_property("Camera", "TriggerPolarity")
         else:
-            return "Camera has no TriggerPolarity"
+            trg_polarity = None
+        self.param["TriggerPolarity"] = trg_polarity
+        return trg_polarity
 
     def get_allTriggerPolarities(self):
         if self.instr.has_property("Camera", "TriggerPolarity"):
@@ -290,6 +313,7 @@ class MMcamera():
             result = self.instr.get_property("Camera", "ScanMode")
         else:
             result = "Global shutter"
+        self.param["ScanMode"] = result
         return result
 
     def set_scan_mode(self, val):  # for Hamamatsu cam
@@ -306,6 +330,7 @@ class MMcamera():
                     self.set_ReadoutRate(ro_rates[0])
                 case _:
                     self.instr.set_property("Camera", "PMode", "Normal")
+        self.get_scan_mode()
 
     def get_test(self):
         low_limit = self.instr.get_property_lower_limit("Camera", "Exposure")
@@ -326,7 +351,6 @@ class MMcamera():
         exp_type = self.instr.get_property_type("Camera", "Exposure")
         print(f"Type: {exp_type}")
         return
-
 
 
 if __name__ == "__main__":
@@ -380,3 +404,4 @@ if __name__ == "__main__":
     # camera.set_TriggerMode(val="Strobed")
     print(f"Trigger mode: {camera.get_TriggerMode()}")
     camera.plot_img()
+    print(camera.param)
