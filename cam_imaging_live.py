@@ -160,12 +160,12 @@ class MainForm(QWidget):
         #get and set PModes to combobox
         PModes = self.camera.get_allPModevalues()
         print(f"Camera avalible modes: {PModes}")
-        self.ui.pModeComboBox.addItems(PModes)
-        pmode = self.camera.get_PMode()
-        print(f"Camera current mode: {pmode}")
-        index = PModes.index(pmode)
-        if index >= 0:
-            self.ui.pModeComboBox.setCurrentIndex(index)
+        # self.ui.pModeComboBox.addItems(PModes)
+        # pmode = self.camera.get_PMode()
+        # print(f"Camera current mode: {pmode}")
+        # index = PModes.index(pmode)
+        # if index >= 0:
+        #     self.ui.pModeComboBox.setCurrentIndex(index)
         # get and set ROrates to combobox
         ROrates = self.camera.get_allReadoutRates()
         print(f"Camera readout rates: {ROrates}")

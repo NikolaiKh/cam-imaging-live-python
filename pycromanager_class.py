@@ -30,10 +30,11 @@ class MMcamera():
     def get_image(self):
         self.instr.snap_image()
         tagged_image = self.instr.get_tagged_image()
-        img = np.reshape(tagged_image.pix, \
-                         newshape=[tagged_image.tags['Height'], tagged_image.tags['Width']]).astype(int)
-        self.param['Height'] = tagged_image.tags['Height']
-        self.param['Width'] = tagged_image.tags['Width']
+        h = tagged_image.tags['Height']
+        w = tagged_image.tags['Width']
+        img = np.reshape(tagged_image.pix[0:h*w], newshape=[h, w])
+        self.param['Height'] = h
+        self.param['Width'] = w
         return img
 
     def plot_img(self):
@@ -110,32 +111,42 @@ class MMcamera():
     def get_PMode(self):
         if "Hamamatsu" in self.name:
             return self.instr.get_property("Camera", "SENSOR MODE")
-        else:
+        elif self.instr.has_property("Camera", "PMode"):
             return self.instr.get_property("Camera", "PMode")
+        else:
+            return
 
     def set_PMode(self, mode="Normal"):
         if "Hamamatsu" in self.name:
             self.instr.set_property("Camera", "SENSOR MODE", mode)
-        else:
+        elif self.instr.has_property("Camera", "PMode"):
             self.instr.set_property("Camera", "PMode", mode)
+        else:
+            return
         # self.get_params()
 
     def get_allPModevalues(self):
-        if "Hamamatsu" not in self.name:
+        if "Hamamatsu" in self.name:
+            javalist = self.instr.get_allowed_property_values("Camera", "SENSOR MODE")
+        elif self.instr.has_property("Camera", "PMode"):
             javalist = self.instr.get_allowed_property_values("Camera", "PMode")
         else:
-            javalist = self.instr.get_allowed_property_values("Camera", "SENSOR MODE")
+            return
         allowed = []
         for index in range(javalist.capacity()):
             allowed.append(javalist.get(index))
         return allowed
 
     def set_PixelType(self, val):
-        self.instr.set_property("Camera", "PixelType", val)
+        if self.instr.has_property("Camera", "PixelType"):
+            self.instr.set_property("Camera", "PixelType", val)
         # self.get_params()
 
     def get_PixelType(self):
-        return self.instr.get_property("Camera", "PixelType")
+        if self.instr.has_property("Camera", "PixelType"):
+            return self.instr.get_property("Camera", "PixelType")
+        else:
+            return "Camear has no PixelType"
         # self.get_params()
 
     def set_gain(self, val=1):
@@ -146,13 +157,13 @@ class MMcamera():
         # self.get_params()
 
     def get_gain(self):
-        if "Hamamatsu" in self.name:
-            return 1
-        else:
+        if self.instr.has_property("Camera", "Gain"):
             return self.instr.get_property("Camera", "Gain")
+        else:
+            return 1
 
     def get_allGainvalues(self):
-        if "Hamamatsu" not in self.name:
+        if self.instr.has_property("Camera", "Gain"):
             javalist = self.instr.get_allowed_property_values("Camera", "Gain")
             allowed = []
             for index in range(javalist.capacity()):
@@ -164,8 +175,10 @@ class MMcamera():
     def get_BitDepth(self):
         if "Hamamatsu" in self.name:
             return self.instr.get_property("Camera", "Bits per Channel")
-        else:
+        elif self.instr.has_property("Camera", "BitDepth"):
             return self.instr.get_property("Camera", "BitDepth")
+        else:
+            return "Camera has no BitDepth"
 
     def set_MaxSens(self, binning=4, mode="PHOTON NUMBER RESOLVING"):
         self.set_binning(binning)
@@ -184,26 +197,22 @@ class MMcamera():
         return allowed
 
     def get_allReadoutRates(self):
-        if "Hamamatsu" not in self.name:
+        allowed = []
+        if self.instr.has_property("Camera", "ReadoutRate"):
             javalist = self.instr.get_allowed_property_values("Camera", "ReadoutRate")
-            allowed = []
             for index in range(javalist.capacity()):
                 allowed.append(javalist.get(index))
-            return allowed
-        else:
-            read_time = float(self.instr.get_property("Camera", "ReadoutTime"))
-            return 1/read_time
+        return allowed
 
     def set_ReadoutRate(self, val):
-        if "Hamamatsu" not in self.name:  # hamamatsu has no the option
+        if self.instr.has_property("Camera", "ReadoutRate"):
             self.instr.set_property("Camera", "ReadoutRate", str(val))
 
     def get_ReadoutRate(self):
-        if "Hamamatsu" not in self.name:
+        if self.instr.has_property("Camera", "ReadoutRate"):
             return self.instr.get_property("Camera", "ReadoutRate")
         else:
-            read_time = float(self.instr.get_property("Camera", "ReadoutTime"))
-            return 1/read_time
+            return "Camera has no ReadoutRate"
 
     def get_allTriggerModes(self):
         if "Hamamatsu" not in self.name:
@@ -228,7 +237,6 @@ class MMcamera():
             return self.instr.get_property("Camera", "TRIGGER SOURCE")
         else:
             return "Camera has no Trigger Mode"
-
 
     def set_TriggerMode(self, val="Timed"):
         # Options we used in experiments (for Teledyne cameras):
@@ -352,7 +360,7 @@ if __name__ == "__main__":
     print(f"PMode {camera.get_PMode()}")
 
     print(f"Scan mode: {camera.get_scan_mode()}")
-    camera.set_scan_mode(2)
+    # camera.set_scan_mode(2)
     print(f"Scan mode: {camera.get_scan_mode()}")
 
     print(f"Gain: {camera.get_gain()}")
@@ -363,12 +371,12 @@ if __name__ == "__main__":
     # print(f"Bytes per pixel {camera.getBytesPerPixel()}")
     # img = camera.get_image()
     # camera.set_exposure(0.05)
-    camera.set_MaxSens(4)
+    # camera.set_MaxSens(4)
     print(f"PMode {camera.get_PMode()}")
     print(f"Scan mode: {camera.get_scan_mode()}")
-    camera.set_shortest_exposure()
+    # camera.set_shortest_exposure()
     print(f"Exposure time: {camera.get_exposure_time()} ms")
 
-    camera.set_TriggerMode(val="Strobed")
+    # camera.set_TriggerMode(val="Strobed")
     print(f"Trigger mode: {camera.get_TriggerMode()}")
     camera.plot_img()
