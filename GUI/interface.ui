@@ -18,7 +18,7 @@
     <rect>
      <x>11</x>
      <y>131</y>
-     <width>401</width>
+     <width>461</width>
      <height>25</height>
     </rect>
    </property>
@@ -39,7 +39,7 @@
     <rect>
      <x>150</x>
      <y>160</y>
-     <width>421</width>
+     <width>481</width>
      <height>25</height>
     </rect>
    </property>
@@ -91,7 +91,7 @@
   <widget class="QPushButton" name="folderButton">
    <property name="geometry">
     <rect>
-     <x>420</x>
+     <x>480</x>
      <y>130</y>
      <width>151</width>
      <height>27</height>
@@ -560,7 +560,7 @@
        <number>3600000</number>
       </property>
       <property name="value">
-       <number>100</number>
+       <number>99</number>
       </property>
      </widget>
     </item>
@@ -696,11 +696,16 @@
   <widget class="QPushButton" name="save_Button">
    <property name="geometry">
     <rect>
-     <x>700</x>
+     <x>640</x>
      <y>130</y>
      <width>81</width>
      <height>56</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
    </property>
    <property name="text">
     <string>Save</string>
@@ -714,6 +719,11 @@
      <width>121</width>
      <height>56</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
    </property>
    <property name="text">
     <string>Set Cam</string>
@@ -760,24 +770,6 @@
      </widget>
     </item>
    </layout>
-  </widget>
-  <widget class="QCheckBox" name="SnapMode_checkBox">
-   <property name="geometry">
-    <rect>
-     <x>800</x>
-     <y>10</y>
-     <width>183</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>12</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>Alt manual Snap Mode</string>
-   </property>
   </widget>
   <widget class="QPushButton" name="Take_snap_button">
    <property name="enabled">
@@ -1025,10 +1017,10 @@
   <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
-     <x>830</x>
-     <y>130</y>
+     <x>760</x>
+     <y>140</y>
      <width>188</width>
-     <height>54</height>
+     <height>112</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -1056,6 +1048,36 @@
       </property>
       <property name="text">
        <string>Save difference image?</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QCheckBox" name="save_datFiles_checkBox">
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Save .dat files?</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QCheckBox" name="save_h5Files_checkBox">
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Save .h5 files?</string>
       </property>
       <property name="checked">
        <bool>true</bool>
@@ -1095,6 +1117,48 @@
      <verstretch>1</verstretch>
     </sizepolicy>
    </property>
+  </widget>
+  <widget class="QWidget" name="">
+   <property name="geometry">
+    <rect>
+     <x>960</x>
+     <y>10</y>
+     <width>381</width>
+     <height>251</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <widget class="QLabel" name="label_6">
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Camera settings</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPlainTextEdit" name="cam_params_plainTextEdit"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_5">
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Log</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPlainTextEdit" name="status_memo_PlainTextEdit"/>
+    </item>
+   </layout>
   </widget>
  </widget>
  <customwidgets>

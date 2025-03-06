@@ -1,6 +1,6 @@
 import sys
 import os
-# from pathlib import Path
+import glob
 try:
     from PyQt5.QtWidgets import QApplication, QWidget, QGraphicsScene, QFileDialog
     from PyQt5.QtCore import QObject, QThreadPool, QRunnable, pyqtSlot, pyqtSignal
@@ -107,21 +107,21 @@ class MainForm(QWidget):
         self.ui.folder_edit.setText(self.path)
 
         # init camera
-        self.Cam_setting = {}
         self.camera_init()
         self.set_camera_settings()
         self.take_images()
         self.Ref = np.zeros(self.img.shape).astype(np.int32)
+        self.Diff = self.Ref
 
         # set functions for buttons
         self.ui.folderButton.clicked.connect(self.show_folder_dialog)
         self.ui.StopButton.clicked.connect(self.stop_button_clicked)
         self.ui.StartButton.clicked.connect(self.start_button_press)
-        self.ui.save_Button.clicked.connect(self.save_image)
-        self.ui.Take_snap_button.clicked.connect(self.Snap_button_pressed)
+        self.ui.save_Button.clicked.connect(self.save_images)
+        self.ui.Take_snap_button.clicked.connect(self.snap_button_pressed)
         self.ui.SetCam_button.clicked.connect(self.set_camera_settings)
-        self.ui.Set_Ref_button.clicked.connect(self.SetRef_button_pressed)
-        self.ui.remove_ref_button.clicked.connect(self.DelRef_button_pressed)
+        self.ui.Set_Ref_button.clicked.connect(self.set_ref_button_pressed)
+        self.ui.remove_ref_button.clicked.connect(self.del_ref_button_pressed)
 
 
         # set params of pyqtgraph widgets / does not work
@@ -147,6 +147,11 @@ class MainForm(QWidget):
         print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
         self.update_frame()
 
+    def log(self, message):
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        new_line = f'{timestamp}  {message}'
+        self.ui.status_memo_PlainTextEdit.appendPlainText(new_line)
+        print(new_line)
 
     def camera_init(self):
         # camera connection
@@ -187,24 +192,23 @@ class MainForm(QWidget):
         self.img = self.camera.get_image().astype(np.int32).T # int32 to save integers => save hard drive space
 
     def set_camera_settings(self):
-        exposure = int(self.ui.ExpTime.text())
+        exposure = self.ui.ExpTime.value()
         self.camera.set_exposure(exposure)
         binning = self.ui.binningComboBox.currentText()
         self.camera.set_binning(binning)
-        # gain = int(self.ui.gain_spinBox.text())
-        # self.camera.set_gain(gain)
+        gain = int(self.ui.gain_spinBox.value())
+        self.camera.set_gain(gain)
         mode = self.ui.pModeComboBox.currentText()
-        self.camera.set_PMode(mode) # Normal mode closes the program sometimes
+        self.camera.set_PMode(mode)   # Normal mode closes the program sometimes
         ReadoutRate = self.ui.ROrateComboBox.currentText()
         self.camera.set_ReadoutRate(ReadoutRate)
-        self.Cam_setting['Exposure'] = exposure
-        self.Cam_setting['Binning'] = binning
-        # self.Cam_setting['Gain'] = gain
-        self.Cam_setting['Mode'] = mode
-        self.Cam_setting['ReadoutRate'] = ReadoutRate
+        cam_params = self.camera.params
+        # show camera parameters
+        self.ui.cam_params_plainTextEdit.clear()
+        for key, value in cam_params.items():
+            self.ui.cam_params_plainTextEdit.appendPlainText(f"{key}: {value}")
 
-    def update(self):
-        self.update_frame()
+
 
     def update_frame(self):
         # update current image
@@ -235,6 +239,7 @@ class MainForm(QWidget):
         if not self.img.shape == self.Ref.shape:
             self.Ref = np.zeros(self.img.shape).astype(np.int32)
         image_data = self.img - self.Ref
+        self.Diff = image_data
         widget = self.ui.Diff_view
         widget.setImage(image_data)
         if self.ui.diffAutoLims_checkBox.isChecked():
@@ -257,8 +262,26 @@ class MainForm(QWidget):
         widget.setLevels(min_value, max_value)  # Set min_value and max_value according to your desired range
         widget.show()
 
-    # def save_images(self):
+
+    def file_exists_with_any_extension(self, directory, filename):
+        # Use glob to find files with the given filename and any extension
+        files = glob.glob(os.path.join(directory, f"{filename}.*"))
+        return len(files) > 0
+
+    def save_images(self):
+        # save .dat files
+        if self.ui.save_datFiles_checkBox.isChecked():
+            if self.ui.saveRef_checkBox.isChecked():
+                self.save_image2dat(widget=self.ui.Image_view)
+            if self.ui.saveDiff_checkBox.isChecked():
+                self.save_image2dat(widget=self.ui.Diff_view)
+
         # saving runs in h5
+        if self.ui.save_h5Files_checkBox.isChecked():
+            if self.ui.saveRef_checkBox.isChecked():
+                return
+            if self.ui.saveDiff_checkBox.isChecked():
+                return
         # fullname = os.path.join(folder, filename)
         # with h5py.File(self.fullpathname, 'a') as f:
         #     imagecount = '{:0>4}'.format(str(self.imagecount))
@@ -275,73 +298,71 @@ class MainForm(QWidget):
         #     f.close()
 
 
-    def save_image(self, format='%d'):
-        # saving one image
+    def get_minimum_dtype(self, min_value, max_value):
+        if min_value >= 0:
+            if max_value <= np.iinfo(np.uint8).max:
+                return np.uint8
+            elif max_value <= np.iinfo(np.uint16).max:
+                return np.uint16
+            elif max_value <= np.iinfo(np.uint32).max:
+                return np.uint32
+            else:
+                return np.uint64
+        else:
+            if min_value >= np.iinfo(np.int8).min and max_value <= np.iinfo(np.int8).max:
+                return np.int8
+            elif min_value >= np.iinfo(np.int16).min and max_value <= np.iinfo(np.int16).max:
+                return np.int16
+            elif min_value >= np.iinfo(np.int32).min and max_value <= np.iinfo(np.int32).max:
+                return np.int32
+            else:
+                return np.int64
+
+
+    def save_image2dat(self, widget=None):
+        if not widget:
+            widget = self.ui.Image_view
+        # saving one image from a widget
         folder = self.ui.folder_edit.text()
         if not os.path.isdir(folder):
             messagebox.showerror("Error", "Folder does not exist!")
             return
         filename = self.ui.FileName.text()
+        # choose the options based on Ref / Diff input
+        if widget == self.ui.Image_view:
+            filename = "Ref_" + filename
+            data2save = self.img
+        else:
+            filename = "Diff_" + filename
+            data2save = self.Diff
+        new_dtype = self.get_minimum_dtype(np.min(data2save), np.max(data2save))
+        data2save = data2save.astype(new_dtype)
+
+        # save .dat and .png files
         if not filename:
             messagebox.showerror("Error", "Please enter a file name")
             return
         fullname = os.path.join(folder, filename)
-        if os.path.exists(fullname):
-            overwrite = messagebox.askyesno('File already exists', 'File already exists. Overwrite?')
+        if self.file_exists_with_any_extension(folder, filename):
+            overwrite = messagebox.askyesno('File already exists', f'File {filename} already exists. Overwrite?')
             if overwrite:
-                with open(fullname, "w") as file:
-                    np.savetxt(file, self.img, fmt='%d')
-                    self.ui.Image_view.export(fullname + ".png")
-                    # messagebox.showinfo("Save", "File saved successfully.")
+                np.savetxt(fullname + ".dat", data2save, fmt='%d')
+                widget.export(fullname + ".png")
+                self.log(f".dat overwrite successfully: {fullname}")
             else:
                 self.isStop = True
         else:
-            dir_name = os.path.dirname(os.path.abspath(fullname))
-            # Path(dir_name).mkdir(parents=True, exist_ok=True)
-            with open(fullname, "w") as file:
-                np.savetxt(file, self.img, fmt='%d')
-                self.ui.Image_view.export(fullname + ".png")
-                # messagebox.showinfo("Save", "File saved successfully.")
-        return
-
-
-    def save_snap(self, image, fullname, format='%d'):
-        # saving one image
-        folder = self.ui.folder_edit.text()
-        if not os.path.isdir(folder):
-            messagebox.showerror("Error", "Folder does not exist!")
-            return
-        filename = self.ui.FileName.text()
-        if not filename:
-            messagebox.showerror("Error", "Please enter a file name")
-            return
-        fullname = os.path.join(folder, filename)
-        if os.path.exists(fullname):
-            overwrite = messagebox.askyesno('File already exists', 'File already exists. Overwrite?')
-            if overwrite:
-                with open(fullname, "w") as file:
-                    np.savetxt(file, image, fmt=format)
-                    # messagebox.showinfo("Save", "File saved successfully.")
-            else:
-                self.isStop = True
-        else:
-            dir_name = os.path.dirname(os.path.abspath(fullname))
-            # Path(dir_name).mkdir(parents=True, exist_ok=True)
-            with open(fullname, "w") as file:
-                np.savetxt(file, image, fmt=format)
-                # messagebox.showinfo("Save", "File saved successfully.")
+            np.savetxt(fullname + ".dat", data2save, fmt='%d')
+            widget.export(fullname + ".png")
+            self.log(f".dat saved successfully: {fullname}")
         return
 
 
     def show_folder_dialog(self):
         folder_path = QFileDialog.getExistingDirectory(self, "Select Directory")
-        self.startpath = folder_path
-        if self.startpath:
-            if (self.startpath.find(str(date.today())) > 0):
-                self.ui.folder_edit.setText(self.startpath + "/")
-            else:
-                self.ui.folder_edit.setText(self.startpath + "/" + str(date.today()) + "/")
-            self.folder_path = self.ui.folder_edit.text()
+        self.ui.folder_edit.setText(folder_path + "/")
+        self.folder_path = self.ui.folder_edit.text()
+
 
     def stop_button_clicked(self):
         print("Stopped")
@@ -349,17 +370,17 @@ class MainForm(QWidget):
         self.enableButtons(True)
         self.update_frame()
         
-    def Snap_button_pressed(self):
+    def snap_button_pressed(self):
         self.take_images()
         self.update_frame()
 
-    def SetRef_button_pressed(self):
+    def set_ref_button_pressed(self):
         if (self.Ref == self.img).all():
             return
         self.Ref = self.img.copy()
         self.update_frame()
 
-    def DelRef_button_pressed(self):
+    def del_ref_button_pressed(self):
         self.Ref = np.zeros(self.img.shape).astype(np.int32)
         self.ui.Diff_view.setImage(self.Ref)
         self.update_frame()
@@ -368,7 +389,7 @@ class MainForm(QWidget):
         self.ui.StartButton.setEnabled(value)
         self.ui.Take_snap_button.setEnabled(value)
             
-    def SnapLoop(self, callback):
+    def snap_loop(self, callback):
         while not self.isStop:
             self.take_images()
             callback()
@@ -390,15 +411,16 @@ class MainForm(QWidget):
         filename = self.ui.FileName.text()
         self.fullpathname = os.path.join(folder, filename + ".hdf5")
 
-        Snapper = Worker(self.SnapLoop)
-        Snapper.signals.progress.connect(self.update)
+        Snapper = Worker(self.snap_loop)
+        Snapper.signals.progress.connect(self.update_frame)
         Snapper.signals.finished.connect(self.finish)
         self.threadpool.start(Snapper)
+
 
     def finish(self):
         self.stop_button_clicked()
 
-    def On_app_quit(self):
+    def on_app_quit(self):
         self.stop_button_clicked()
         self.threadpool.waitForDone()
         quit()
@@ -407,5 +429,5 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
     mainWindow = MainForm()
-    app.aboutToQuit.connect(mainWindow.On_app_quit)
+    app.aboutToQuit.connect(mainWindow.on_app_quit)
     sys.exit(app.exec())
