@@ -15,9 +15,6 @@ import numpy as np
 
 from GUI.interface import Ui_Form
 import pycromanager_class
-# from AppData.EquipmentClasses.devClasses import Lockin_SR_devclass as Lockin_class
-# from AppData.EquipmentClasses.devClasses import OxfordInst_ITC5023S_devclass as TempContrl_class
-# from AppData.EquipmentClasses.devClasses import pycromanager_devclass as pycromanager_class
 import time
 from datetime import datetime, date, timedelta
 # import json
@@ -112,6 +109,7 @@ class MainForm(QWidget):
         self.take_images()
         self.Ref = np.zeros(self.img.shape).astype(np.int32)
         self.Diff = self.Ref
+        self.image_count = 0
 
         # set functions for buttons
         self.ui.folderButton.clicked.connect(self.show_folder_dialog)
@@ -122,7 +120,8 @@ class MainForm(QWidget):
         self.ui.SetCam_button.clicked.connect(self.set_camera_settings)
         self.ui.Set_Ref_button.clicked.connect(self.set_ref_button_pressed)
         self.ui.remove_ref_button.clicked.connect(self.del_ref_button_pressed)
-
+        self.ui.SaveSettings_button.clicked.connect(self.save_cam_settings)
+        self.ui.LoadSettings_button.clicked.connect(self.load_cam_settings)
 
         # set params of pyqtgraph widgets / does not work
         # hist = self.ui.Image_view.getHistogramWidget()
@@ -188,8 +187,26 @@ class MainForm(QWidget):
         if index >= 0:
             self.ui.binningComboBox.setCurrentIndex(index)
 
+
+    def save_cam_settings(self):
+        # Save camera.params as np dictinary
+        dictionary = self.camera.params
+        np.save('cam_settings.npy', dictionary)
+
+    def load_cam_settings(self):
+        # Load camera.params as np dictionary
+        dictionary = np.load('cam_settings.npy', allow_pickle='TRUE').item()
+        for key in dictionary.keys():
+            self.camera.set_property(key, dictionary[key])
+            self.log(f"Property {key} set to {dictionary[key]}")
+        self.ui.gain_spinBox.setValue(int(dictionary["Gain"]))
+        self.ui.ExpTime.setValue(float(dictionary["Exposure"]))
+        self.set_camera_settings()
+
+
     def take_images(self):
         self.img = self.camera.get_image().astype(np.int32).T # int32 to save integers => save hard drive space
+
 
     def set_camera_settings(self):
         exposure = self.ui.ExpTime.value()
@@ -202,13 +219,15 @@ class MainForm(QWidget):
         self.camera.set_PMode(mode)   # Normal mode closes the program sometimes
         ReadoutRate = self.ui.ROrateComboBox.currentText()
         self.camera.set_ReadoutRate(ReadoutRate)
+        # show camera parameters
+        self.show_cam_parameters()
+
+    def show_cam_parameters(self):
         cam_params = self.camera.params
         # show camera parameters
         self.ui.cam_params_plainTextEdit.clear()
         for key, value in cam_params.items():
             self.ui.cam_params_plainTextEdit.appendPlainText(f"{key}: {value}")
-
-
 
     def update_frame(self):
         # update current image
@@ -269,6 +288,7 @@ class MainForm(QWidget):
         return len(files) > 0
 
     def save_images(self):
+        self.image_count += 1   # count saved images
         # save .dat files
         if self.ui.save_datFiles_checkBox.isChecked():
             if self.ui.saveRef_checkBox.isChecked():
@@ -276,26 +296,14 @@ class MainForm(QWidget):
             if self.ui.saveDiff_checkBox.isChecked():
                 self.save_image2dat(widget=self.ui.Diff_view)
 
-        # saving runs in h5
+        # save in .h5 files
         if self.ui.save_h5Files_checkBox.isChecked():
             if self.ui.saveRef_checkBox.isChecked():
                 return
+                # self.save_image2h5(widget=self.ui.Image_view)
             if self.ui.saveDiff_checkBox.isChecked():
                 return
-        # fullname = os.path.join(folder, filename)
-        # with h5py.File(self.fullpathname, 'a') as f:
-        #     imagecount = '{:0>4}'.format(str(self.imagecount))
-        #     Imagename = f"Image_{imagecount}"
-        #     # Save the image data with compression
-        #     Myimg = f.create_dataset(Imagename, data=self.img, dtype='uint32', compression='gzip')
-        #
-        #     # Add metadata as attributes
-        #     Myimg.attrs['image_shape'] = self.img.shape
-        #     Myimg.attrs['color_mode'] = 'grayscale'
-        #     Myimg.attrs['Magnetic field'] = f"{self.mVoltage } (V), {self.mfield} mT"
-        #     Myimg.attrs['Temp'] = self.Temp['current']
-        #     Myimg.attrs['DateTime'] = datetime.now().replace(microsecond=0).isoformat()
-        #     f.close()
+                # self.save_image2h5(widget=self.ui.Diff_view)
 
 
     def get_minimum_dtype(self, min_value, max_value):
@@ -317,6 +325,41 @@ class MainForm(QWidget):
                 return np.int32
             else:
                 return np.int64
+
+    def save_image2h5(self, widget=None):
+        if not widget:
+            widget = self.ui.Image_view
+            # saving one image from a widget
+        folder = self.ui.folder_edit.text()
+        if not os.path.isdir(folder):
+            messagebox.showerror("Error", "Folder does not exist!")
+            return
+        filename = self.ui.FileName.text()
+        # choose the options based on Ref / Diff input
+        if widget == self.ui.Image_view:
+            filename = "Ref_" + filename
+            data2save = self.img
+        else:
+            filename = "Diff_" + filename
+            data2save = self.Diff
+        #   prepare the data
+        new_dtype = self.get_minimum_dtype(np.min(data2save), np.max(data2save))
+        data2save = data2save.astype(new_dtype)
+
+        #   save the data
+        fullname = os.path.join(folder, filename)
+        with h5py.File(fullname+".h5", 'a') as f:
+            image_count = '{:0>4}'.format(str(self.image_count))
+            image_name = f"Image_{image_count}"
+            # Save the image data with compression
+            my_img = f.create_dataset(image_name, data=data2save, dtype=new_dtype, compression='gzip')
+
+            # Add metadata as attributes
+            # my_img.attrs['MetaData'] = self.camera.img_metadata
+            # my_img.attrs = self.camera.params
+            my_img.attrs['DateTime'] = datetime.now().replace(microsecond=0).isoformat()
+            f.close()
+        self.log(f".h5 updated successfully: {fullname}")
 
 
     def save_image2dat(self, widget=None):
@@ -346,14 +389,26 @@ class MainForm(QWidget):
         if self.file_exists_with_any_extension(folder, filename):
             overwrite = messagebox.askyesno('File already exists', f'File {filename} already exists. Overwrite?')
             if overwrite:
+                # save image raw data to file
                 np.savetxt(fullname + ".dat", data2save, fmt='%d')
+                # save snapshot
                 widget.export(fullname + ".png")
+                # save image metadata
+                with open(fullname + ".meta", 'w') as file:
+                    for k in sorted(self.camera.img_metadata.keys()):
+                        file.write("'%s':'%s', \n" % (k, self.camera.img_metadata[k]))
                 self.log(f".dat overwrite successfully: {fullname}")
             else:
                 self.isStop = True
         else:
             np.savetxt(fullname + ".dat", data2save, fmt='%d')
             widget.export(fullname + ".png")
+            # save image metadata
+            # save image metadata
+            with open(fullname + ".meta", 'w') as file:
+                for k in sorted(self.camera.img_metadata.keys()):
+                    file.write("'%s':'%s', \n" % (k, self.camera.img_metadata[k]))
+                file.write("}")
             self.log(f".dat saved successfully: {fullname}")
         return
 
