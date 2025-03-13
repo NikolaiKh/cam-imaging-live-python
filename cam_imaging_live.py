@@ -120,8 +120,8 @@ class MainForm(QWidget):
         self.ui.SetCam_button.clicked.connect(self.set_camera_settings)
         self.ui.Set_Ref_button.clicked.connect(self.set_ref_button_pressed)
         self.ui.remove_ref_button.clicked.connect(self.del_ref_button_pressed)
-        self.ui.SaveSettings_button.clicked.connect(self.save_cam_settings)
-        self.ui.LoadSettings_button.clicked.connect(self.load_cam_settings)
+        self.ui.SaveSettings_button.clicked.connect(self.save_settings)
+        self.ui.LoadSettings_button.clicked.connect(self.load_settings)
 
         # set params of pyqtgraph widgets / does not work
         # hist = self.ui.Image_view.getHistogramWidget()
@@ -140,6 +140,9 @@ class MainForm(QWidget):
         self.ref_int_max = 1
         self.diff_int_min = -1
         self.diff_int_max = 1
+
+        # load saved settings
+        self.load_settings()
 
         # setup thread pool
         self.threadpool = QThreadPool()
@@ -188,20 +191,31 @@ class MainForm(QWidget):
             self.ui.binningComboBox.setCurrentIndex(index)
 
 
-    def save_cam_settings(self):
+    def save_settings(self):
         # Save camera.params as np dictinary
         dictionary = self.camera.params
+        dictionary["Folder"] = self.ui.folder_edit.text()
+        dictionary["FileName"] = self.ui.FileName.text()
         np.save('cam_settings.npy', dictionary)
+        self.log("Settings saved")
 
-    def load_cam_settings(self):
+    def load_settings(self):
         # Load camera.params as np dictionary
-        dictionary = np.load('cam_settings.npy', allow_pickle='TRUE').item()
-        for key in dictionary.keys():
-            self.camera.set_property(key, dictionary[key])
-            self.log(f"Property {key} set to {dictionary[key]}")
-        self.ui.gain_spinBox.setValue(int(dictionary["Gain"]))
-        self.ui.ExpTime.setValue(float(dictionary["Exposure"]))
-        self.set_camera_settings()
+        settings_file = 'cam_settings.npy'
+        if os.path.exists(settings_file):
+            dictionary = np.load(settings_file, allow_pickle='TRUE').item()
+            for key in dictionary.keys():
+                self.camera.set_property(key, dictionary[key])
+                self.log(f"{key} set to {dictionary[key]}")
+            self.ui.gain_spinBox.setValue(int(dictionary["Gain"]))
+            self.ui.ExpTime.setValue(float(dictionary["Exposure"]))
+            self.set_camera_settings()
+            # update folder and file_name
+            self.ui.folder_edit.setText(dictionary["Folder"])
+            self.ui.FileName.setText(dictionary["FileName"])
+            self.log("Settings loaded")
+        else:
+            self.log("No saved setting. Use default settings")
 
 
     def take_images(self):
@@ -393,8 +407,13 @@ class MainForm(QWidget):
                 np.savetxt(fullname + ".dat", data2save, fmt='%d')
                 # save snapshot
                 widget.export(fullname + ".png")
-                # save image metadata
+                # save cam_params and image metadata
                 with open(fullname + ".meta", 'w') as file:
+                    file.write("cam_params = {")
+                    for k in sorted(self.camera.params.keys()):
+                        file.write("'%s':'%s', \n" % (k, self.camera.params[k]))
+                    file.write("} \n")
+                    file.write("img_metadata = {")
                     for k in sorted(self.camera.img_metadata.keys()):
                         file.write("'%s':'%s', \n" % (k, self.camera.img_metadata[k]))
                 self.log(f".dat overwrite successfully: {fullname}")
@@ -403,9 +422,13 @@ class MainForm(QWidget):
         else:
             np.savetxt(fullname + ".dat", data2save, fmt='%d')
             widget.export(fullname + ".png")
-            # save image metadata
-            # save image metadata
+            # save cam_params and image metadata
             with open(fullname + ".meta", 'w') as file:
+                file.write("cam_params = {")
+                for k in sorted(self.camera.params.keys()):
+                    file.write("'%s':'%s', \n" % (k, self.camera.params[k]))
+                file.write("} \n")
+                file.write("img_metadata = {")
                 for k in sorted(self.camera.img_metadata.keys()):
                     file.write("'%s':'%s', \n" % (k, self.camera.img_metadata[k]))
                 file.write("}")
