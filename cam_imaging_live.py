@@ -204,9 +204,10 @@ class MainForm(QWidget):
         settings_file = 'cam_settings.npy'
         if os.path.exists(settings_file):
             dictionary = np.load(settings_file, allow_pickle='TRUE').item()
-            for key in dictionary.keys():
-                self.camera.set_property(key, dictionary[key])
-                self.log(f"{key} set to {dictionary[key]}")
+            if dictionary["Description"] == self.camera.get_camera_name():
+                for key in dictionary.keys():
+                    self.camera.set_property(key, dictionary[key])
+                    self.log(f"{key} set to {dictionary[key]}")
             self.ui.gain_spinBox.setValue(int(dictionary["Gain"]))
             self.ui.ExpTime.setValue(float(dictionary["Exposure"]))
             self.set_camera_settings()
