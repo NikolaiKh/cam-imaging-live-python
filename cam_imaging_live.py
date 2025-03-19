@@ -17,11 +17,10 @@ from GUI.interface import Ui_Form
 import pycromanager_class
 import time
 from datetime import datetime, date, timedelta
-# import json
 import h5py
 
 
-# 2 next classes for multithreading
+# 2 next classes are for multithreading
 
 class WorkerSignals(QObject):
     '''
@@ -105,7 +104,7 @@ class MainForm(QWidget):
 
         # init camera
         self.camera_init()
-        self.set_camera_settings()
+        # self.set_camera_settings()
         self.take_images()
         self.Ref = np.zeros(self.img.shape).astype(np.int32)
         self.Diff = self.Ref
@@ -140,9 +139,6 @@ class MainForm(QWidget):
         self.ref_int_max = 1
         self.diff_int_min = -1
         self.diff_int_max = 1
-
-        # load saved settings
-        self.load_settings()
 
         # setup thread pool
         self.threadpool = QThreadPool()
@@ -220,8 +216,10 @@ class MainForm(QWidget):
 
 
     def take_images(self):
-        self.img = self.camera.get_image().astype(np.int32).T # int32 to save integers => save hard drive space
-
+        # self.log("Camera busy")
+        # self.ui.status_memo_PlainTextEdit.update()
+        self.img = self.camera.get_image().astype(np.int32).T   # int32 to save integers => save hard drive space
+        # self.log("Camera ready")
 
     def set_camera_settings(self):
         exposure = self.ui.ExpTime.value()
@@ -230,10 +228,10 @@ class MainForm(QWidget):
         self.camera.set_binning(binning)
         gain = int(self.ui.gain_spinBox.value())
         self.camera.set_gain(gain)
-        mode = self.ui.pModeComboBox.currentText()
-        self.camera.set_PMode(mode)   # Normal mode closes the program sometimes
-        ReadoutRate = self.ui.ROrateComboBox.currentText()
-        self.camera.set_ReadoutRate(ReadoutRate)
+        # mode = self.ui.pModeComboBox.currentText()
+        # self.camera.set_PMode(mode)   # Normal mode closes the program sometimes
+        # ReadoutRate = self.ui.ROrateComboBox.currentText()
+        # self.camera.set_ReadoutRate(ReadoutRate)
         # show camera parameters
         self.show_cam_parameters()
 
@@ -410,6 +408,9 @@ class MainForm(QWidget):
                 widget.export(fullname + ".png")
                 # save cam_params and image metadata
                 with open(fullname + ".meta", 'w') as file:
+                    file.write("comments = { \n")
+                    file.write(self.ui.comments_memo_PlainTextEdit.toPlainText())
+                    file.write("} \n")
                     file.write("cam_params = {")
                     for k in sorted(self.camera.params.keys()):
                         file.write("'%s':'%s', \n" % (k, self.camera.params[k]))
@@ -425,6 +426,9 @@ class MainForm(QWidget):
             widget.export(fullname + ".png")
             # save cam_params and image metadata
             with open(fullname + ".meta", 'w') as file:
+                file.write("comments = { \n")
+                file.write(self.ui.comments_memo_PlainTextEdit.toPlainText())
+                file.write("} \n")
                 file.write("cam_params = {")
                 for k in sorted(self.camera.params.keys()):
                     file.write("'%s':'%s', \n" % (k, self.camera.params[k]))
