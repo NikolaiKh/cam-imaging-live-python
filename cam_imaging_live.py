@@ -104,7 +104,7 @@ class MainForm(QWidget):
 
         # init camera
         self.camera_init()
-        # self.set_camera_settings()
+        self.set_camera_settings()
         self.take_images()
         self.Ref = np.zeros(self.img.shape).astype(np.int32)
         self.Diff = self.Ref
@@ -457,6 +457,7 @@ class MainForm(QWidget):
         self.update_frame()
         
     def snap_button_pressed(self):
+        self.set_camera_settings()
         self.take_images()
         self.update_frame()
 
@@ -482,6 +483,7 @@ class MainForm(QWidget):
             time.sleep(0.025)
 
     def start_button_press(self):
+        self.set_camera_settings()
         # start main measurements
         if not self.isStop:
             return
