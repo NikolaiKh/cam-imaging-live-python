@@ -213,6 +213,7 @@ class MainForm(QWidget):
             self.log("Settings loaded")
         else:
             self.log("No saved setting. Use default settings")
+        self.show_cam_parameters()
 
 
     def take_images(self):
@@ -241,6 +242,8 @@ class MainForm(QWidget):
         self.ui.cam_params_plainTextEdit.clear()
         for key, value in cam_params.items():
             self.ui.cam_params_plainTextEdit.appendPlainText(f"{key}: {value}")
+        scrollbar = self.ui.cam_params_plainTextEdit.verticalScrollBar()
+        scrollbar.setSliderPosition(0)
 
     def update_frame(self):
         # update current image

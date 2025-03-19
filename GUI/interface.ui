@@ -1160,10 +1160,17 @@
       <property name="enabled">
        <bool>true</bool>
       </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
      </widget>
     </item>
     <item row="1" column="0">
-     <widget class="QPlainTextEdit" name="cam_params_plainTextEdit"/>
+     <widget class="QPlainTextEdit" name="cam_params_plainTextEdit">
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
     </item>
     <item row="1" column="1">
      <widget class="QPlainTextEdit" name="comments_memo_PlainTextEdit">
