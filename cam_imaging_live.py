@@ -4,6 +4,7 @@ import glob
 try:
     from PyQt5.QtWidgets import QApplication, QWidget, QGraphicsScene, QFileDialog
     from PyQt5.QtCore import QObject, QThreadPool, QRunnable, pyqtSlot, pyqtSignal
+    from PyQt5.QtGui import QIcon
 except:
     from PyQt6.QtWidgets import QApplication, QWidget, QGraphicsScene, QFileDialog
     from PyQt6.QtCore import QObject, QThreadPool, QRunnable, pyqtSlot, pyqtSignal
@@ -18,6 +19,7 @@ import pycromanager_class
 import time
 from datetime import datetime, date, timedelta
 import h5py
+import ctypes # needs for icon on taskbar in Windows
 
 
 # 2 next classes are for multithreading
@@ -93,6 +95,7 @@ class MainForm(QWidget):
         super().__init__()
         # set parameters of GUI
         self.setWindowTitle('Camera live imaging')
+        self.setWindowIcon(QIcon('.\GUI\cam_icon.png'))   # set icon
         # create an instance of Ui_Form
         self.ui = Ui_Form()
         # initialization of GUI
@@ -514,6 +517,10 @@ class MainForm(QWidget):
         quit()
 
 if __name__ == '__main__':
+    # these 2 strings are for icon on TaskBar in Windows
+    myappid = 'Nikolai.Khokhlov.LiveImagingCam.1.2'  # arbitrary string
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
     mainWindow = MainForm()
