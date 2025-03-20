@@ -28,7 +28,7 @@ class MMcamera():
 
     def get_camera_name(self):
         name = self.instr.get_property(self.device_label, "Description")
-        self.params["Name"] = name
+        self.params["Description"] = name
         return name
 
 
@@ -40,12 +40,14 @@ class MMcamera():
         img = np.reshape(tagged_image.pix[0:h * w], newshape=[h, w])
         self.params['Height'] = h
         self.params['Width'] = w
-        # save image metadata
-        self.img_metadata = tagged_image.tags
+        # save image metadata not about camera
+        for key in tagged_image.tags:
+            if "Camera-" not in key:
+                self.img_metadata[key] = tagged_image.tags[key]
         # save parameters of the camera only 
-        for key in self.img_metadata.keys():
+        for key in tagged_image.tags.keys():
             if "Camera-" in key:
-                self.params[key.split("-")[1]] = self.img_metadata[key]
+                self.params[key.split("-")[1]] = tagged_image.tags[key]
         return img
 
     def plot_img(self):

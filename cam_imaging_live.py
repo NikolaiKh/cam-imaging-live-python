@@ -413,11 +413,11 @@ class MainForm(QWidget):
                 with open(fullname + ".meta", 'w') as file:
                     file.write("comments = { \n")
                     file.write(self.ui.comments_memo_PlainTextEdit.toPlainText())
-                    file.write("} \n")
+                    file.write("} \n\n")
                     file.write("cam_params = {")
                     for k in sorted(self.camera.params.keys()):
                         file.write("'%s':'%s', \n" % (k, self.camera.params[k]))
-                    file.write("} \n")
+                    file.write("} \n\n")
                     file.write("img_metadata = {")
                     for k in sorted(self.camera.img_metadata.keys()):
                         file.write("'%s':'%s', \n" % (k, self.camera.img_metadata[k]))
@@ -431,11 +431,11 @@ class MainForm(QWidget):
             with open(fullname + ".meta", 'w') as file:
                 file.write("comments = { \n")
                 file.write(self.ui.comments_memo_PlainTextEdit.toPlainText())
-                file.write("} \n")
+                file.write("} \n\n")
                 file.write("cam_params = {")
                 for k in sorted(self.camera.params.keys()):
                     file.write("'%s':'%s', \n" % (k, self.camera.params[k]))
-                file.write("} \n")
+                file.write("} \n\n")
                 file.write("img_metadata = {")
                 for k in sorted(self.camera.img_metadata.keys()):
                     file.write("'%s':'%s', \n" % (k, self.camera.img_metadata[k]))
