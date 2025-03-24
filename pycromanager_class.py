@@ -34,7 +34,7 @@ class MMcamera():
 
     def get_image(self):
         if "Hamamatsu" in self.params["Description"]:
-            self.set_scan_mode(1)   # Hamamatsu gives unknown error at long exposure times
+            self.set_scan_mode(1)   # Hamamatsu gives unknown error at long exposure times. The line helps
         self.instr.snap_image()
         tagged_image = self.instr.get_tagged_image()
         h = tagged_image.tags['Height']

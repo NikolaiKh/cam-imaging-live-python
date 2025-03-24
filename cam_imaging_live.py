@@ -496,7 +496,8 @@ class MainForm(QWidget):
         # prepare measurements
         self.isStop = False
         self.enableButtons(False)
-        self.Ref = np.zeros(self.img.shape).astype(np.int32)
+        if self.img.shape != self.Ref.shape:
+            self.Ref = np.zeros(self.img.shape).astype(np.int32)
         self.ui.Diff_view.setImage(self.Ref)
         self.set_camera_settings()
 
