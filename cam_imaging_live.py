@@ -222,7 +222,9 @@ class MainForm(QWidget):
     def take_images(self):
         # self.log("Camera busy")
         # self.ui.status_memo_PlainTextEdit.update()
-        self.img = self.camera.get_image().astype(np.int32).T   # int32 to save integers => save hard drive space
+        temp_img = self.camera.get_image().astype(np.int32).T   # int32 to save integers => save hard drive space
+        # w, h = temp_img.shape
+        self.img = temp_img
         # self.log("Camera ready")
 
     def set_camera_settings(self):
