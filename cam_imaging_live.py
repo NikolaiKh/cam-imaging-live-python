@@ -159,6 +159,7 @@ class MainForm(QWidget):
         self.camera = pycromanager_class.MMcamera()
         #set max sensetivity
         # self.camera.set_MaxSens()
+        self.camera.set_scan_mode(1)
         #get and set gains
         gain = self.camera.get_gain()
         print(f"Camera gain: {gain}")
