@@ -8,6 +8,7 @@ try:
 except:
     from PyQt6.QtWidgets import QApplication, QWidget, QGraphicsScene, QFileDialog
     from PyQt6.QtCore import QObject, QThreadPool, QRunnable, pyqtSlot, pyqtSignal
+import pyqtgraph as pg
     
 import traceback
 import tkinter
@@ -19,7 +20,7 @@ import pycromanager_class
 import time
 from datetime import datetime, date, timedelta
 import h5py
-import ctypes # needs for icon on taskbar in Windows
+import ctypes   # needs for icon on taskbar in Windows
 
 
 # 2 next classes are for multithreading
@@ -159,7 +160,7 @@ class MainForm(QWidget):
         self.camera = pycromanager_class.MMcamera()
         #set max sensetivity
         # self.camera.set_MaxSens()
-        self.camera.set_scan_mode(1)
+        # self.camera.set_scan_mode(1)
         #get and set gains
         gain = self.camera.get_gain()
         print(f"Camera gain: {gain}")
@@ -275,6 +276,25 @@ class MainForm(QWidget):
             max_value = self.ui.refMaxInt_spinBox.value()
         widget.setLevels(min_value, max_value)  # Set min_value and max_value according to your desired range
         widget.show()
+        # add rectangle mark
+        view = widget.getView()
+        if self.ui.UseMark_checkBox.isChecked():
+            # self.rectItem = pg.RectROI([0, 0], [10, 10], pen=pg.mkPen('r'))
+            self.Indicators = pg.PlotDataItem(pen=pg.mkPen(color='w', width=1), symbol='o', symbolSize=5)
+            width = self.ui.widthMark_spinBox.value()
+            height = self.ui.hightMark_spinBox.value()
+            center_x = self.ui.centerMark_x_spinBox.value()
+            center_y = self.ui.centerMark_y_spinBox.value()
+            self.Vertices = np.array([[width//2 + center_x, height//2 + center_y],
+                                      [-width//2 + center_x, height//2 + center_y],
+                                      [-width//2 + center_x, -height//2 + center_y],
+                                      [width//2 + center_x, -height//2 + center_y],
+                                      [width//2 + center_x, height//2 + center_y]])
+            self.Indicators.setData(self.Vertices)
+            view.addItem(self.Indicators)
+        else:
+            if hasattr(self, 'Indicators'):
+                self.Indicators.setData([], [])
 
         #update difference image
         if not self.img.shape == self.Ref.shape:
@@ -302,7 +322,18 @@ class MainForm(QWidget):
         # View difference image
         widget.setLevels(min_value, max_value)  # Set min_value and max_value according to your desired range
         widget.show()
+        if self.ui.UseMark_checkBox.isChecked():
+            # self.rectItem = pg.RectROI([0, 0], [10, 10], pen=pg.mkPen('r'))
+            view = widget.getView()
+            self.Indicators = pg.PlotDataItem(pen=pg.mkPen(color='w', width=1), symbol='o', symbolSize=5)
+            view.addItem(self.Indicators)
+            self.Indicators.setData(self.Vertices)
 
+    def mouseClickedEvent(self, event):
+        pos = event.scenePos()
+        if self.plotWidget.sceneBoundingRect().contains(pos):
+            mousePoint = self.plotWidget.plotItem.vb.mapSceneToView(pos)
+            self.rectItem.setPos(mousePoint.x(), mousePoint.y())
 
     def file_exists_with_any_extension(self, directory, filename):
         # Use glob to find files with the given filename and any extension
@@ -521,7 +552,7 @@ class MainForm(QWidget):
         quit()
 
 if __name__ == '__main__':
-    # these 2 strings are for icon on TaskBar in Windows
+    # next 2 lines are for icon on TaskBar in Windows
     myappid = 'Nikolai.Khokhlov.LiveImagingCam.1.2'  # arbitrary string
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
