@@ -191,6 +191,21 @@ class MainForm(QWidget):
         if index >= 0:
             self.ui.binningComboBox.setCurrentIndex(index)
 
+        # something for image ROI rectangle
+        self.indicators = pg.PlotDataItem(pen=pg.mkPen(color='r', width=1), symbol='o', symbolSize=4)
+        view = self.ui.Image_view.getView()
+        view.addItem(self.indicators)
+        self.indicators2 = pg.PlotDataItem(pen=pg.mkPen(color='r', width=1), symbol='o', symbolSize=4)
+        view2 = self.ui.Diff_view.getView()
+        view2.addItem(self.indicators2)
+        # Create a grid overlay
+        grid = pg.GridItem()
+        grid.setPen(pg.mkPen(None))
+        # grid.setTextPen(pg.mkPen(color='r', width=4))
+        view.addItem(grid)
+        grid2 = pg.GridItem()
+        grid2.setPen(pg.mkPen(None))
+        view2.addItem(grid2)
 
     def save_settings(self):
         # Save camera.params as np dictinary
@@ -277,24 +292,19 @@ class MainForm(QWidget):
         widget.setLevels(min_value, max_value)  # Set min_value and max_value according to your desired range
         widget.show()
         # add rectangle mark
-        view = widget.getView()
         if self.ui.UseMark_checkBox.isChecked():
-            # self.rectItem = pg.RectROI([0, 0], [10, 10], pen=pg.mkPen('r'))
-            self.Indicators = pg.PlotDataItem(pen=pg.mkPen(color='w', width=1), symbol='o', symbolSize=5)
             width = self.ui.widthMark_spinBox.value()
             height = self.ui.hightMark_spinBox.value()
             center_x = self.ui.centerMark_x_spinBox.value()
             center_y = self.ui.centerMark_y_spinBox.value()
-            self.Vertices = np.array([[width//2 + center_x, height//2 + center_y],
+            vertices = np.array([[width//2 + center_x, height//2 + center_y],
                                       [-width//2 + center_x, height//2 + center_y],
                                       [-width//2 + center_x, -height//2 + center_y],
                                       [width//2 + center_x, -height//2 + center_y],
                                       [width//2 + center_x, height//2 + center_y]])
-            self.Indicators.setData(self.Vertices)
-            view.addItem(self.Indicators)
+            self.indicators.setData(vertices)
         else:
-            if hasattr(self, 'Indicators'):
-                self.Indicators.setData([], [])
+            self.indicators.setData([], [])
 
         #update difference image
         if not self.img.shape == self.Ref.shape:
@@ -322,12 +332,11 @@ class MainForm(QWidget):
         # View difference image
         widget.setLevels(min_value, max_value)  # Set min_value and max_value according to your desired range
         widget.show()
+        # add rectangle mark
         if self.ui.UseMark_checkBox.isChecked():
-            # self.rectItem = pg.RectROI([0, 0], [10, 10], pen=pg.mkPen('r'))
-            view = widget.getView()
-            self.Indicators = pg.PlotDataItem(pen=pg.mkPen(color='w', width=1), symbol='o', symbolSize=5)
-            view.addItem(self.Indicators)
-            self.Indicators.setData(self.Vertices)
+            self.indicators2.setData(vertices)
+        else:
+            self.indicators2.setData([], [])
 
     def mouseClickedEvent(self, event):
         pos = event.scenePos()
