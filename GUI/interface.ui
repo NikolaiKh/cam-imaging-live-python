@@ -1276,7 +1276,7 @@ Pump polarization:
     <string>Use mark</string>
    </property>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>461</x>
@@ -1309,10 +1309,13 @@ Pump polarization:
        </font>
       </property>
       <property name="minimum">
-       <number>50</number>
+       <number>0</number>
       </property>
       <property name="maximum">
        <number>65535</number>
+      </property>
+      <property name="value">
+       <number>50</number>
       </property>
      </widget>
     </item>
@@ -1339,10 +1342,13 @@ Pump polarization:
        </font>
       </property>
       <property name="minimum">
-       <number>50</number>
+       <number>0</number>
       </property>
       <property name="maximum">
        <number>65535</number>
+      </property>
+      <property name="value">
+       <number>50</number>
       </property>
      </widget>
     </item>
@@ -1369,10 +1375,13 @@ Pump polarization:
        </font>
       </property>
       <property name="minimum">
-       <number>50</number>
+       <number>0</number>
       </property>
       <property name="maximum">
        <number>65535</number>
+      </property>
+      <property name="value">
+       <number>50</number>
       </property>
      </widget>
     </item>
@@ -1384,10 +1393,13 @@ Pump polarization:
        </font>
       </property>
       <property name="minimum">
-       <number>50</number>
+       <number>0</number>
       </property>
       <property name="maximum">
        <number>65535</number>
+      </property>
+      <property name="value">
+       <number>50</number>
       </property>
      </widget>
     </item>
