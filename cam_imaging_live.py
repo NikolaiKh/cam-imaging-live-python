@@ -438,6 +438,12 @@ class MainForm(QWidget):
             filename = "Ref_" + filename
             data2save = self.img
         else:
+            # save difference to separate folder
+            try:
+                folder = os.path.join(folder, 'Difference')
+                os.makedirs(folder, exist_ok=True)
+            except OSError as e:
+                print(f"Error creating directory '{folder}': {e}")
             filename = "Diff_" + filename
             data2save = self.Diff
         new_dtype = self.get_minimum_dtype(np.min(data2save), np.max(data2save))
@@ -452,11 +458,23 @@ class MainForm(QWidget):
             overwrite = messagebox.askyesno('File already exists', f'File {filename} already exists. Overwrite?')
             if overwrite:
                 # save image raw data to file
-                np.savetxt(fullname + ".dat", data2save, fmt='%d')
+                try:
+                    raw_data_folder = os.path.join(folder, 'Raw_data')
+                    os.makedirs(raw_data_folder, exist_ok=True)
+                except OSError as e:
+                    print(f"Error creating directory '{raw_data_folder}': {e}")
+                raw_data_fullname = os.path.join(raw_data_folder, filename)
+                np.savetxt(raw_data_fullname + ".dat", data2save, fmt='%d')
                 # save snapshot
                 widget.export(fullname + ".png")
                 # save cam_params and image metadata
-                with open(fullname + ".meta", 'w') as file:
+                try:
+                    meta_data_folder = os.path.join(folder, 'Metadata')
+                    os.makedirs(meta_data_folder, exist_ok=True)
+                except OSError as e:
+                    print(f"Error creating directory '{meta_data_folder}': {e}")
+                meta_data_fullname = os.path.join(meta_data_folder, filename)
+                with open(meta_data_fullname + ".meta", 'w') as file:
                     file.write("comments = { \n")
                     file.write(self.ui.comments_memo_PlainTextEdit.toPlainText())
                     file.write("} \n\n")
@@ -467,14 +485,28 @@ class MainForm(QWidget):
                     file.write("img_metadata = {")
                     for k in sorted(self.camera.img_metadata.keys()):
                         file.write("'%s':'%s', \n" % (k, self.camera.img_metadata[k]))
-                self.log(f".dat overwrite successfully: {fullname}")
+                self.log(f"Overwrite successfully: {fullname}")
             else:
                 self.isStop = True
         else:
-            np.savetxt(fullname + ".dat", data2save, fmt='%d')
+            # save image raw data to file
+            try:
+                raw_data_folder = os.path.join(folder, 'Raw_data')
+                os.makedirs(raw_data_folder, exist_ok=True)
+            except OSError as e:
+                print(f"Error creating directory '{raw_data_folder}': {e}")
+            raw_data_fullname = os.path.join(raw_data_folder, filename)
+            np.savetxt(raw_data_fullname + ".dat", data2save, fmt='%d')
+            # save snapshot
             widget.export(fullname + ".png")
             # save cam_params and image metadata
-            with open(fullname + ".meta", 'w') as file:
+            try:
+                meta_data_folder = os.path.join(folder, 'Metadata')
+                os.makedirs(meta_data_folder, exist_ok=True)
+            except OSError as e:
+                print(f"Error creating directory '{meta_data_folder}': {e}")
+            meta_data_fullname = os.path.join(meta_data_folder, filename)
+            with open(meta_data_fullname + ".meta", 'w') as file:
                 file.write("comments = { \n")
                 file.write(self.ui.comments_memo_PlainTextEdit.toPlainText())
                 file.write("} \n\n")
@@ -485,8 +517,7 @@ class MainForm(QWidget):
                 file.write("img_metadata = {")
                 for k in sorted(self.camera.img_metadata.keys()):
                     file.write("'%s':'%s', \n" % (k, self.camera.img_metadata[k]))
-                file.write("}")
-            self.log(f".dat saved successfully: {fullname}")
+            self.log(f"Saved successfully: {fullname}")
         return
 
 
