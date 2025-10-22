@@ -1,3 +1,9 @@
+### Wrap for pycromanager https://pycro-manager.readthedocs.io/en/latest/
+# made by Nikolai Khokhlov
+# vesrion: 2025.09.17.0
+# latest version: https://github.com/NikolaiKh/Hardware-classes/blob/main/pycromanager_class.py
+###
+
 # Import micromanager classes
 from pycromanager import Core
 # from pycromanager import Bridge
@@ -35,8 +41,12 @@ class MMcamera():
     def get_image(self):
         if "Hamamatsu" in self.params["Description"]:
             self.set_scan_mode(1)   # Hamamatsu gives unknown error at long exposure times. The line helps
-        self.instr.snap_image()
-        tagged_image = self.instr.get_tagged_image()
+        # Hamamatsu gives array of Zeros sometimes at longer exp times
+        mean_val = 0
+        while mean_val == 0:
+            self.instr.snap_image()
+            tagged_image = self.instr.get_tagged_image()
+            mean_val = np.mean(tagged_image.pix)
         h = tagged_image.tags['Height']
         w = tagged_image.tags['Width']
         img = np.reshape(tagged_image.pix[0:h * w], newshape=[h, w])
@@ -46,7 +56,7 @@ class MMcamera():
         for key in tagged_image.tags:
             if "Camera-" not in key:
                 self.img_metadata[key] = tagged_image.tags[key]
-        # save parameters of the camera only 
+        # save parameters of the camera only
         for key in tagged_image.tags.keys():
             if "Camera-" in key:
                 self.params[key.split("-")[1]] = tagged_image.tags[key]
@@ -430,3 +440,4 @@ if __name__ == "__main__":
     camera.plot_img()
     print(camera.params)
     np.save('cam_settings.npy', camera.params)
+

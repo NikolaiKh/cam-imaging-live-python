@@ -352,11 +352,10 @@ class MainForm(QWidget):
     def save_images(self):
         self.image_count += 1   # count saved images
         # save .dat files
-        if self.ui.save_datFiles_checkBox.isChecked():
-            if self.ui.saveRef_checkBox.isChecked():
-                self.save_image2dat(widget=self.ui.Image_view)
-            if self.ui.saveDiff_checkBox.isChecked():
-                self.save_image2dat(widget=self.ui.Diff_view)
+        if self.ui.saveRef_checkBox.isChecked():
+            self.save_image2dat(widget=self.ui.Image_view)
+        if self.ui.saveDiff_checkBox.isChecked():
+            self.save_image2dat(widget=self.ui.Diff_view)
 
         # save in .h5 files
         if self.ui.save_h5Files_checkBox.isChecked():
@@ -458,13 +457,14 @@ class MainForm(QWidget):
             overwrite = messagebox.askyesno('File already exists', f'File {filename} already exists. Overwrite?')
             if overwrite:
                 # save image raw data to file
-                try:
-                    raw_data_folder = os.path.join(folder, 'Raw_data')
-                    os.makedirs(raw_data_folder, exist_ok=True)
-                except OSError as e:
-                    print(f"Error creating directory '{raw_data_folder}': {e}")
-                raw_data_fullname = os.path.join(raw_data_folder, filename)
-                np.savetxt(raw_data_fullname + ".dat", data2save, fmt='%d')
+                if self.ui.save_datFiles_checkBox.isChecked():
+                    try:
+                        raw_data_folder = os.path.join(folder, 'Raw_data')
+                        os.makedirs(raw_data_folder, exist_ok=True)
+                    except OSError as e:
+                        print(f"Error creating directory '{raw_data_folder}': {e}")
+                    raw_data_fullname = os.path.join(raw_data_folder, filename)
+                    np.savetxt(raw_data_fullname + ".dat", data2save, fmt='%d')
                 # save snapshot
                 widget.export(fullname + ".png")
                 # save cam_params and image metadata
@@ -490,13 +490,14 @@ class MainForm(QWidget):
                 self.isStop = True
         else:
             # save image raw data to file
-            try:
-                raw_data_folder = os.path.join(folder, 'Raw_data')
-                os.makedirs(raw_data_folder, exist_ok=True)
-            except OSError as e:
-                print(f"Error creating directory '{raw_data_folder}': {e}")
-            raw_data_fullname = os.path.join(raw_data_folder, filename)
-            np.savetxt(raw_data_fullname + ".dat", data2save, fmt='%d')
+            if self.ui.save_datFiles_checkBox.isChecked():
+                try:
+                    raw_data_folder = os.path.join(folder, 'Raw_data')
+                    os.makedirs(raw_data_folder, exist_ok=True)
+                except OSError as e:
+                    print(f"Error creating directory '{raw_data_folder}': {e}")
+                raw_data_fullname = os.path.join(raw_data_folder, filename)
+                np.savetxt(raw_data_fullname + ".dat", data2save, fmt='%d')
             # save snapshot
             widget.export(fullname + ".png")
             # save cam_params and image metadata
