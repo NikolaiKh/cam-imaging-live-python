@@ -1,3 +1,6 @@
+# made by Nikolai Khokhlov
+# version 2025.10.22.1
+
 import sys
 import os
 import glob
