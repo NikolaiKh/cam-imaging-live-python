@@ -1,5 +1,5 @@
 # made by Nikolai Khokhlov
-# version 2025.10.22.1
+# version 2026.08.11.0
 
 import sys
 import os
@@ -270,30 +270,33 @@ class MainForm(QWidget):
         scrollbar = self.ui.cam_params_plainTextEdit.verticalScrollBar()
         scrollbar.setSliderPosition(0)
 
-    def update_frame(self):
-        # update current image
-        image_data = self.img
-        widget = self.ui.Image_view
+    def show_image_in_widget(self, image_data, widget):
+        # update widget
+        if widget == self.ui.Image_view:
+            auto_check_box = self.ui.refAutoLims_checkBox.isChecked()
+        else:
+            auto_check_box = self.ui.diffAutoLims_checkBox.isChecked()
         # View image
-        widget.setImage(image_data)
-        if self.ui.refAutoLims_checkBox.isChecked():
+        if auto_check_box:
             # Get the number of rows and columns
             num_rows, num_columns = image_data.shape
             # Get the central subarray
-            central_subarray = image_data[num_rows//4: num_rows*3//4, num_columns//4: num_columns*3//4]
+            central_subarray = image_data[num_rows // 4: num_rows * 3 // 4, num_columns // 4: num_columns * 3 // 4]
             # Compute the maximum and minimum values
             max_value = np.max(central_subarray)
             min_value = np.min(central_subarray)
             # update limits for future
-            self.ref_int_min = min_value
-            self.ref_int_max = max_value
-            self.ui.refMinInt_spinBox.setValue(min_value)
-            self.ui.refMaxInt_spinBox.setValue(max_value)
+            widget.setImage(image_data)
+            widget.setLevels(min_value, max_value)
         else:
-            min_value = self.ui.refMinInt_spinBox.value()
-            max_value = self.ui.refMaxInt_spinBox.value()
-        widget.setLevels(min_value, max_value)  # Set min_value and max_value according to your desired range
+            widget.setImage(image_data, autoLevels=False)
+        # widget.setLevels(min_value, max_value)  # Set min_value and max_value according to your desired range
         widget.show()
+
+    def update_frame(self):
+        # update main image
+        self.show_image_in_widget(image_data=self.img, widget=self.ui.Image_view)
+
         # add rectangle mark
         if self.ui.UseMark_checkBox.isChecked():
             width = self.ui.widthMark_spinBox.value()
@@ -314,27 +317,8 @@ class MainForm(QWidget):
             self.Ref = np.zeros(self.img.shape).astype(np.int32)
         image_data = self.img - self.Ref
         self.Diff = image_data
-        widget = self.ui.Diff_view
-        widget.setImage(image_data)
-        if self.ui.diffAutoLims_checkBox.isChecked():
-            # Get the number of rows and columns
-            num_rows, num_columns = image_data.shape
-            # Get the central subarray
-            central_subarray = image_data[num_rows//4: num_rows*3//4, num_columns//4: num_columns*3//4]
-            # Compute the maximum and minimum values
-            max_value = np.max(central_subarray)
-            min_value = np.min(central_subarray)
-            # update limits for future
-            self.diff_int_min = min_value
-            self.diff_int_max = max_value
-            self.ui.diffMinInt_spinBox.setValue(min_value)
-            self.ui.diffMaxInt_spinBox.setValue(max_value)
-        else:
-            min_value = self.ui.diffMinInt_spinBox.value()
-            max_value = self.ui.diffMaxInt_spinBox.value()
-        # View difference image
-        widget.setLevels(min_value, max_value)  # Set min_value and max_value according to your desired range
-        widget.show()
+        self.show_image_in_widget(image_data=self.Diff, widget=self.ui.Diff_view)
+
         # add rectangle mark
         if self.ui.UseMark_checkBox.isChecked():
             self.indicators2.setData(vertices)
