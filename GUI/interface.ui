@@ -1045,32 +1045,6 @@ Pump polarization:
     <string>Load settings</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="CameraReady_indButton">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>880</x>
-     <y>280</y>
-     <width>91</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>10</pointsize>
-     <weight>75</weight>
-     <bold>true</bold>
-    </font>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">background-color: rgb(255, 85, 0);</string>
-   </property>
-   <property name="text">
-    <string>Camera busy</string>
-   </property>
-  </widget>
   <widget class="QCheckBox" name="UseMark_checkBox">
    <property name="geometry">
     <rect>
@@ -1234,11 +1208,11 @@ Pump polarization:
     </sizepolicy>
    </property>
   </widget>
-  <widget class="QCheckBox" name="refAutoLims_checkBox">
+  <widget class="QCheckBox" name="diffAutoLims_checkBox">
    <property name="geometry">
     <rect>
-     <x>21</x>
-     <y>275</y>
+     <x>980</x>
+     <y>270</y>
      <width>77</width>
      <height>21</height>
     </rect>
@@ -1255,10 +1229,10 @@ Pump polarization:
     <bool>true</bool>
    </property>
   </widget>
-  <widget class="QCheckBox" name="diffAutoLims_checkBox">
+  <widget class="QCheckBox" name="refAutoLims_checkBox">
    <property name="geometry">
     <rect>
-     <x>971</x>
+     <x>21</x>
      <y>275</y>
      <width>77</width>
      <height>21</height>
