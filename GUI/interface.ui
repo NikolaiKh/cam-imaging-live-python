@@ -912,22 +912,6 @@
     </item>
    </layout>
   </widget>
-  <widget class="ImageView" name="Image_view" native="true">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>310</y>
-     <width>1000</width>
-     <height>700</height>
-    </rect>
-   </property>
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-     <horstretch>1</horstretch>
-     <verstretch>1</verstretch>
-    </sizepolicy>
-   </property>
-  </widget>
   <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
@@ -1192,22 +1176,6 @@ Pump polarization:
     </item>
    </layout>
   </widget>
-  <widget class="ImageView" name="Diff_view" native="true">
-   <property name="geometry">
-    <rect>
-     <x>1030</x>
-     <y>310</y>
-     <width>1000</width>
-     <height>700</height>
-    </rect>
-   </property>
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-     <horstretch>1</horstretch>
-     <verstretch>1</verstretch>
-    </sizepolicy>
-   </property>
-  </widget>
   <widget class="QCheckBox" name="diffAutoLims_checkBox">
    <property name="geometry">
     <rect>
@@ -1249,6 +1217,35 @@ Pump polarization:
    <property name="checked">
     <bool>true</bool>
    </property>
+  </widget>
+  <widget class="QSplitter" name="splitter">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>330</y>
+     <width>2000</width>
+     <height>1000</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+   <widget class="ImageView" name="Image_view" native="true">
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+      <horstretch>1</horstretch>
+      <verstretch>1</verstretch>
+     </sizepolicy>
+    </property>
+   </widget>
+   <widget class="ImageView" name="Diff_view" native="true">
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+      <horstretch>1</horstretch>
+      <verstretch>1</verstretch>
+     </sizepolicy>
+    </property>
+   </widget>
   </widget>
  </widget>
  <customwidgets>

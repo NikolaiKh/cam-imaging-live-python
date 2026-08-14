@@ -1,5 +1,5 @@
 # made by Nikolai Khokhlov
-# version 2026.08.11
+# version 2026.08.14
 
 import sys
 import os
@@ -289,10 +289,10 @@ class MainForm(QWidget):
             widget.setImage(image_data)
             widget.setLevels(min_value, max_value)
         else:
-            vmin, vmax = widget.getLevels() # get colormap limits
+            vmin, vmax = widget.getLevels()   # get colormap limits
             widget.setImage(image_data,
                             autoLevels=False,
-                            autoHistogramRange=False, # fix histogram to jump
+                            autoHistogramRange=False,   # fix histogram to jump
                             levels=[vmin, vmax])
         # widget.setLevels(min_value, max_value)  # Set min_value and max_value according to your desired range
         widget.show()
